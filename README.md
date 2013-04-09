@@ -5,6 +5,8 @@ Simple tool to make REST API requests to jira.
 
 Requirements
 ------------
+This script is working in Python3.
+
 [requests](python-requests.org)
 
 Config

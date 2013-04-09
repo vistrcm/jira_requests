@@ -1,12 +1,12 @@
 #!/sbin/venv python
 
-from __future__ import print_function, absolute_import, division
+
 import requests
 import json
 import logging
 import os
 import getpass
-import ConfigParser
+import configparser
 
 SERVER = 'http://jira'
 API_PATH = '/rest/api/'
@@ -78,7 +78,7 @@ class Jira:
         else:
             raise Exception('Unsupported request_type', request_type)
 
-        return request.json
+        return request.json()
 
     def search(self, jql=None):
         issues = []
@@ -125,15 +125,15 @@ def get_cred():
 
     # first try to parse config file
     try:
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(CONFIG_FILE)
         username = config.get(SERVER, "username")
         password = config.get(SERVER, "password")
-    except Exception, e:
+    except Exception as e:
         print("exception on getting data from config: %s" % e)
         print("asking user")
         # get auth info from user
-        username = raw_input('input username: ')
+        username = input('input username: ')
         password = getpass.getpass(prompt='input password: ')
 
     return (username, password)
