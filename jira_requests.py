@@ -150,8 +150,7 @@ def main():
     username, password = get_cred()
 
     jira = Jira(URL, username, password)
-    issues = jira.search_issues(
-        'project = WDSDO AND status in (Open, "In Progress", Reopened) AND Label = duty ORDER BY priority DESC, status ASC, key DESC')
+    issues = jira.search_issues("assignee = currentUser()")
 
     for issue in issues:
         print("{}\t\t{}".format(issue.key, issue.field('summary')))
