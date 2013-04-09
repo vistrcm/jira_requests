@@ -18,8 +18,12 @@ URL = '{server}{api_path}{api_ver}'.format(
 )
 CONFIG_FILE = os.path.expanduser("~/.jira_requests")
 
-# logging.basicConfig(level=logging.DEBUG)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    filename='jira_requests.log',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# logging.basicConfig(level=logging.INFO)
 
 
 class Issue:
@@ -47,9 +51,10 @@ class Jira:
             "password": self.passwd
         }
 
-        self._session.post('http://jira/rest/auth/1/session',
-                           headers=headers,
-                           data=json.dumps(auth))
+        request = self._session.post('http://jira/rest/auth/1/session',
+                                     headers=headers,
+                                     data=json.dumps(auth))
+        logging.debug("auth request.text: {}".format(request.text))
 
     def request(self, url=None, path=None, params=None, request_type='GET'):
 
@@ -89,14 +94,15 @@ class Jira:
 
             while start_at + max_results <= total:
                 params = {
-                    'jql': jql,
-                    'startAt': start_at,
-                    'maxResults': max_results
+                    "jql": jql,
+                    "startAt": start_at,
+                    "maxResults": max_results
                 }
 
                 result = self.request(path='/search',
                                       params=params,
                                       request_type='POST')
+                logging.debug("search result: {}".format(result['issues']))
                 issues = issues + result['issues']
                 start_at += max_results
                 total = result['total']
