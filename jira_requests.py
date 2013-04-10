@@ -1,5 +1,5 @@
 #!/sbin/venv python
-
+"""package for simplify commont work with Jira"""
 
 import requests
 import json
@@ -27,6 +27,8 @@ logging.basicConfig(
 
 
 class Issue:
+    """Issue class is representation of Jira issue."""
+
     def __init__(self, jira=None, key=None, issue_self=None):
         self.jira = jira
         self.key = key
@@ -62,6 +64,8 @@ class Issue:
 
 
 class Jira:
+    """Representation of Jira"""
+
     def __init__(self, url=None, user=None, passwd=None):
         self.url = url
         self.user = user
@@ -81,6 +85,7 @@ class Jira:
         logging.debug("auth request.text: {}".format(request.text))
 
     def request(self, url=None, path=None, params=None, request_type='GET'):
+        """Actuall method which make http request"""
 
         if url is None:
             url = self.url
