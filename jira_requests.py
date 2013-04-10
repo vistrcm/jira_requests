@@ -32,9 +32,33 @@ class Issue:
         self.key = key
         self.issue_self = issue_self
 
-    def field(self, field_name):
+    def field(self, field_name, sub=None):
+        """method to get values of different fields"""
+
+        def get_subfield(field, sub):
+            """get subfield value or raise ecxeption"""
+            if sub in field:
+                return field[sub]
+            else:
+                raise Exception('Unsupported fields in value dictionary',
+                                field_value)
+
         issue = self.jira.issue(self.issue_self)
-        return issue['fields'][field_name]['value']
+
+        field_value = issue['fields'][field_name]['value']
+
+        # a lot of ifs
+        if isinstance(field_value, dict):
+            if sub is not None:
+                result = get_subfield(field_value, sub)
+            else:
+                result = get_subfield(field_value, 'name')
+        elif isinstance(field_value, str):
+            result = field_value
+        else:
+            raise Exception('Unsupported type of value field', field_value)
+
+        return result
 
 
 class Jira:
