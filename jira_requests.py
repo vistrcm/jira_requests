@@ -7,6 +7,7 @@ import logging
 import os
 import getpass
 import configparser
+import functools
 
 SERVER = 'http://jira'
 API_PATH = '/rest/api/'
@@ -46,6 +47,8 @@ class Issue:
                                 field_value)
 
         issue = self.jira.issue(self.issue_self)
+        logging.debug("issue cache_info: {}".format(
+            self.jira.issue.cache_info()))
 
         field_value = issue['fields'][field_name]['value']
 
@@ -165,6 +168,7 @@ class Jira:
                   for issue in search_results]
         return issues
 
+    @functools.lru_cache(maxsize=6)
     def issue(self, url=None):
         result = self.request(url)
         return result
