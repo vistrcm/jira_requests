@@ -92,7 +92,12 @@ class Jira:
             max_results = 50
             total = 1000000
 
-            while start_at + max_results <= total:
+            # some logging for debug
+            logging.debug("initial start_at = {}".format(start_at))
+            logging.debug("initial max_results = {}".format(max_results))
+            logging.debug("initial total = {}".format(total))
+
+            while True:
                 params = {
                     "jql": jql,
                     "startAt": start_at,
@@ -103,7 +108,18 @@ class Jira:
                                       params=params,
                                       request_type='POST')
                 logging.debug("search result: {}".format(result['issues']))
+
                 issues = issues + result['issues']
+
+                # some logging for debug
+                logging.debug("step start_at = {}".format(start_at))
+                logging.debug("step max_results = {}".format(max_results))
+                logging.debug("step total = {}".format(total))
+
+                if start_at + max_results >= total:
+                    logging.debug("breaking search loop.")
+                    break
+
                 start_at += max_results
                 total = result['total']
 
