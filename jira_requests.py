@@ -151,6 +151,7 @@ class Jira:
 
                 start_at += max_results
                 total = result['total']
+                logging.debug("Search not finished. Continue")
 
         else:
             raise Exception('JQL string not set')
