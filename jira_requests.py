@@ -199,7 +199,12 @@ def main():
     issues = jira.search_issues("assignee = currentUser()")
 
     for issue in issues:
-        print("{}\t\t{}".format(issue.key, issue.field('summary')))
+        print("{id}\t{name}\t{priority}\t{status}\t{assignee}".format(
+            id=issue.key,
+            name=issue.field('summary'),
+            priority=issue.field('priority'),
+            status=issue.field('status'),
+            assignee=issue.field('assignee', sub='displayName')))
 
 
 if __name__ == "__main__":
