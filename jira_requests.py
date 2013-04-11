@@ -118,6 +118,9 @@ class Jira:
         return request.json()
 
     def search(self, jql=None):
+        """search for issues"""
+
+        logging.info("jql = {}".format(jql))
         issues = []
         if jql is not None:
             start_at = 0
