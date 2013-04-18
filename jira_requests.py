@@ -218,4 +218,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logging.info("programm was interrupted by KeyboardInterrupt")
+        logging.info("program was interrupted by KeyboardInterrupt")
