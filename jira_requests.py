@@ -87,7 +87,7 @@ class Jira:
                                      data=json.dumps(auth))
         logging.debug("auth request.text: {}".format(request.text))
 
-    def request(self, url=None, path=None, params=None, request_type='GET'):
+    def __request(self, url=None, path=None, params=None, request_type='GET'):
         """Actuall method which make http request"""
 
         if url is None:
@@ -117,7 +117,7 @@ class Jira:
 
         return request.json()
 
-    def search(self, jql=None):
+    def __search(self, jql=None):
         """search for issues"""
 
         logging.info("jql = {}".format(jql))
@@ -139,7 +139,7 @@ class Jira:
                     "maxResults": max_results
                 }
 
-                result = self.request(path='/search',
+                result = self.__request(path='/search',
                                       params=params,
                                       request_type='POST')
                 logging.debug("search result: {}".format(result['issues']))
@@ -165,7 +165,7 @@ class Jira:
         return issues
 
     def search_issues(self, jql=None):
-        search_results = self.search(jql)
+        search_results = self.__search(jql)
 
         issues = [Issue(self, issue['key'], issue['self'])
                   for issue in search_results]
@@ -173,7 +173,7 @@ class Jira:
 
     @functools.lru_cache(maxsize=6)
     def issue(self, url=None):
-        result = self.request(url)
+        result = self.__request(url)
         return result
 
 
