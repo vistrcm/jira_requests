@@ -88,7 +88,7 @@ class Jira:
         logging.debug("auth request.text: {}".format(request.text))
 
     def __request(self, url=None, path=None, params=None, request_type='GET'):
-        """Actuall method which make http request"""
+        """Actual method which make http request"""
 
         if url is None:
             url = self.url
