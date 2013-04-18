@@ -1,5 +1,5 @@
 #!/sbin/venv python
-"""package for simplify commont work with Jira"""
+"""package for simplify common work with Jira"""
 
 import requests
 import json
