@@ -8,6 +8,7 @@ import os
 import getpass
 import configparser
 import functools
+import argparse
 
 SERVER = 'http://jira'
 API_PATH = '/rest/api/'
@@ -19,12 +20,14 @@ URL = '{server}{api_path}{api_ver}'.format(
 )
 CONFIG_FILE = os.path.expanduser("~/.jira_requests")
 
-logging.basicConfig(
-    filename='jira_requests.log',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-# logging.basicConfig(level=logging.INFO)
+LOGGING_LEVEL = logging.INFO
+logger = logging.getLogger("jira_requests")
+logger.setLevel(LOGGING_LEVEL)
+fh = logging.FileHandler('jira_requests.log')
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 
 class Issue:
@@ -47,7 +50,7 @@ class Issue:
                                 field_value)
 
         issue = self.jira.issue(self.issue_self)
-        logging.debug("issue cache_info: {}".format(
+        logger.debug("issue cache_info: {}".format(
             self.jira.issue.cache_info()))
 
         field_value = issue['fields'][field_name]['value']
@@ -85,7 +88,7 @@ class Jira:
         request = self._session.post('http://jira/rest/auth/1/session',
                                      headers=headers,
                                      data=json.dumps(auth))
-        logging.debug("auth request.text: {}".format(request.text))
+        logger.debug("auth request.text: {}".format(request.text))
 
     def __request(self, url=None, path=None, params=None, request_type='GET'):
         """Actual method which make http request"""
@@ -98,7 +101,7 @@ class Jira:
 
         if request_type is 'GET':
 
-            logging.debug('GETting {} with params {}'.format(url, params))
+            logger.debug('GETting {} with params {}'.format(url, params))
 
             request = self._session.get(url,
                                         params=params)
@@ -107,7 +110,7 @@ class Jira:
 
             headers = {'Content-Type': 'application/json'}
 
-            logging.debug('POSTing {} with params {}'.format(url, params))
+            logger.debug('POSTing {} with params {}'.format(url, params))
             request = self._session.post(url,
                                          data=json.dumps(params),
                                          headers=headers)
@@ -120,7 +123,7 @@ class Jira:
     def __search(self, jql=None):
         """search for issues"""
 
-        logging.info("jql = {}".format(jql))
+        logger.info("jql = {}".format(jql))
         issues = []
         if jql is not None:
             start_at = 0
@@ -128,9 +131,9 @@ class Jira:
             total = 1000000
 
             # some logging for debug
-            logging.debug("initial start_at = {}".format(start_at))
-            logging.debug("initial max_results = {}".format(max_results))
-            logging.debug("initial total = {}".format(total))
+            logger.debug("initial start_at = {}".format(start_at))
+            logger.debug("initial max_results = {}".format(max_results))
+            logger.debug("initial total = {}".format(total))
 
             while True:
                 params = {
@@ -142,22 +145,22 @@ class Jira:
                 result = self.__request(path='/search',
                                       params=params,
                                       request_type='POST')
-                logging.debug("search result: {}".format(result['issues']))
+                logger.debug("search result: {}".format(result['issues']))
 
                 issues = issues + result['issues']
 
                 # some logging for debug
-                logging.debug("step start_at = {}".format(start_at))
-                logging.debug("step max_results = {}".format(max_results))
-                logging.debug("step total = {}".format(total))
+                logger.debug("step start_at = {}".format(start_at))
+                logger.debug("step max_results = {}".format(max_results))
+                logger.debug("step total = {}".format(total))
 
                 if start_at + max_results >= total:
-                    logging.debug("breaking search loop.")
+                    logger.debug("breaking search loop.")
                     break
 
                 start_at += max_results
                 total = result['total']
-                logging.debug("Search not finished. Continue")
+                logger.debug("Search not finished. Continue")
 
         else:
             raise Exception('JQL string not set')
@@ -214,8 +217,24 @@ def main():
             assignee=issue.field('assignee', sub='displayName')))
 
 
+def command_line():
+    """parse command line args"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", help="specify action")
+    parser.add_argument("--debug", help="debug output", action="store_true")
+    args = parser.parse_args()
+
+    # check for debug
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        logger.debug("debug logging level turned on")
+
+    print(args.action)
+
+
+
 if __name__ == "__main__":
     try:
-        main()
+        command_line()
     except KeyboardInterrupt:
         logging.info("program was interrupted by KeyboardInterrupt")
