@@ -21,7 +21,7 @@ URL = '{server}{api_path}{api_ver}'.format(
 CONFIG_FILE = os.path.expanduser("~/.jira_requests")
 
 LOGGING_LEVEL = logging.INFO
-logger = logging.getLogger("jira_requests")
+logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 fh = logging.FileHandler('jira_requests.log')
 formatter = logging.Formatter(
@@ -143,8 +143,8 @@ class Jira:
                 }
 
                 result = self.__request(path='/search',
-                                      params=params,
-                                      request_type='POST')
+                                        params=params,
+                                        request_type='POST')
                 logger.debug("search result: {}".format(result['issues']))
 
                 issues = issues + result['issues']
@@ -198,15 +198,17 @@ def get_cred():
         username = input('input username: ')
         password = getpass.getpass(prompt='input password: ')
 
-    return (username, password)
+    return username, password
 
 
-def main():
-    """start programm"""
+def search_command(args):
+    """search command executed"""
+    logger.info("going to search something: {}".format(args))
+
     username, password = get_cred()
 
     jira = Jira(URL, username, password)
-    issues = jira.search_issues("assignee = currentUser()")
+    issues = jira.search_issues(args.jql)
 
     for issue in issues:
         print("{id}\t{name}\t{priority}\t{status}\t{assignee}".format(
@@ -217,11 +219,34 @@ def main():
             assignee=issue.field('assignee', sub='displayName')))
 
 
-def command_line():
+def show_command(args):
+    """show command executed"""
+    print("show: {}".format(args))
+    print("Not implemented yet")
+
+
+def main():
     """parse command line args"""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("action", help="specify action")
-    parser.add_argument("--debug", help="debug output", action="store_true")
+    parser = argparse.ArgumentParser('jira_requests utility')
+
+    parser.add_argument("-d", "--debug", help="debug output",
+                        action="store_true")
+
+    subparsers = parser.add_subparsers(title='subcommands',
+                                       dest='subparser_name',
+                                       description='valid subcommands',
+                                       help='additional sub-command help')
+
+    # create parser for "search" command
+    parser_search = subparsers.add_parser('search', help='search for issues')
+    parser_search.add_argument('jql', help='JQL to execute')
+    parser_search.set_defaults(func=search_command)
+
+    # create parser for "show" command
+    parser_show = subparsers.add_parser('show', help='show issue')
+    parser_show.add_argument('ticket_id', help='JIRA issue id to show')
+    parser_show.set_defaults(func=show_command)
+
     args = parser.parse_args()
 
     # check for debug
@@ -229,12 +254,12 @@ def command_line():
         logger.setLevel(logging.DEBUG)
         logger.debug("debug logging level turned on")
 
-    print(args.action)
-
+    # execute required function
+    args.func(args)
 
 
 if __name__ == "__main__":
     try:
-        command_line()
+        main()
     except KeyboardInterrupt:
-        logging.info("program was interrupted by KeyboardInterrupt")
+        logger.info("program was interrupted by KeyboardInterrupt")
