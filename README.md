@@ -18,3 +18,18 @@ By default config file contains user credentials. ~/.jira_requests
 username=super_admin
 password=very_long_password
 ```
+
+Usage
+-----
+
+Only search action supported by now
+
+```
+python jira_requests.py search <JQL>
+```
+
+example:
+
+```
+python jira_requests.py search "assignee = currentUser()"
+```
