@@ -1,5 +1,6 @@
-venv3new/
 .idea/
 jira_requests.sublime-project
 jira_requests.sublime-workspace
 jira_requests.log
+results/
+venv/
