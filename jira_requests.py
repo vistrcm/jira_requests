@@ -9,6 +9,7 @@ import getpass
 import configparser
 import functools
 import argparse
+import concurrent.futures as futures
 
 SERVER = 'http://jira'
 API_PATH = '/rest/api/'
@@ -218,6 +219,42 @@ def search_command(args):
             status=issue.field('status'),
             assignee=issue.field('assignee', sub='displayName')))
 
+def search_command_parallel(args):
+    """Parallel search command executed"""
+    def issue_to_print(issue):
+        issue_str = "{id}\t{name}\t{priority}\t{status}\t{assignee}".format(
+            id=issue.key,
+            name=issue.field('summary'),
+            priority=issue.field('priority'),
+            status=issue.field('status'),
+            assignee=issue.field('assignee', sub='displayName'))
+        return issue_str
+
+    logger.info("going to search something: {}".format(args))
+
+    username, password = get_cred()
+    jira = Jira(URL, username, password)
+    issues_list = jira.search_issues(args.jql)
+
+    issues_to_print = {}
+    # With statement to ensure threads are cleaned up promptly
+    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # Start the load operations and mark each future with its issue key
+        future_to_issue = {executor.submit(issue_to_print, issue): issue.key for issue in issues_list}
+        for future in futures.as_completed(future_to_issue):
+            issue_str = future_to_issue[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                logger.error('%r generated an exception: %s', issue_str, exc)
+            else:
+                logger.debug('%r page is %s', issue_str, data)
+                issues_to_print[issue_str] = data
+
+    for issue in issues_list:
+        print(issues_to_print[issue.key])
+
+
 
 def show_command(args):
     """show command executed"""
@@ -240,7 +277,8 @@ def main():
     # create parser for "search" command
     parser_search = subparsers.add_parser('search', help='search for issues')
     parser_search.add_argument('jql', help='JQL to execute')
-    parser_search.set_defaults(func=search_command)
+    # parser_search.set_defaults(func=search_command)
+    parser_search.set_defaults(func=search_command_parallel)
 
     # create parser for "show" command
     parser_show = subparsers.add_parser('show', help='show issue')
